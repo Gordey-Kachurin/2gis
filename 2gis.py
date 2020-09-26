@@ -22,6 +22,7 @@ wsTarget = wbTarget.active
 
 gis_links_to_search = []
 # COLLECTING LINKS FROM SOURCE FILE ".xlsx"
+print('Собираю ссылки 2ГИС с первого столбца файла ".xlsx"')
 for i in range(1, row_count + 1): # '+1' to write the last row
     cell_value = gis_links_sheet.cell(row = i, column = 1).value
     gis_links_to_search.append(cell_value)
@@ -33,7 +34,7 @@ region = ''
 phone = ''
 timetable_data = []
 headers = ["Регион",'Улица', 'Пон', "Вт", "Ср", "Чт", "Пт", "Сб", "Вс", "Все дни", "Тел", 'Ссылка']
-
+ 
 
 # SAVE FILE
 def save_exit():
@@ -47,6 +48,9 @@ def save_exit():
     wbTarget.close()
     gis_links_file.close()
     browser.quit()
+
+    print()
+    print(f'Закончил работу.\nДанные сохранены в папку "{start}\\{end}\\", файл "{date} 2gis.xlsx"', end='\n\n')
     sys.exit() # comment this line if you want program to go on
 
 
@@ -84,6 +88,8 @@ def prepare_data_for_excel(data_list):
     That created different cases to work with. 
      
     Function may cause [TypeError: 'NoneType' object is not iterable] in [for loop] if none of conditions apply.
+
+    Order of [if] statements matter.
     '''
 
     global street
@@ -105,6 +111,19 @@ def prepare_data_for_excel(data_list):
         data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time, phone] 
         return data_list
  
+ # 13 ['Пн', '08:00–17:00', 'Вт', '08:00–17:00', 'Ср', '08:00–17:00', 'Чт', 'Пт', '08:00–17:00', 'Сб', '08:00–12:00', 'Вс', '—']
+    if len(data_list) == 13 and  ('выдача' not in  data_list  and  'Пт' ==  data_list[7]):
+        mon = data_list[1] 
+        tue = data_list[3] 
+        wed = data_list[5] 
+        fri = data_list[8] 
+        sat = data_list[-3]  
+        sun = data_list[-1]
+            
+        data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, '', phone]
+        return data_list
+
+
 # 13 [ 'Пн', '08:00–12:00', 'Вт', '08:00–12:00', 'Ср', '08:00–12:00', 'Чт', '08:00–12:00', 'Пт', 'Сб', '—', 'Вс', '—']
     if len(data_list) == 13 and  'Сб' == data_list[9]:
         mon = data_list[1] 
@@ -252,29 +271,28 @@ def get_gis_data(gis_link_to_search):
         
 
         if len(timetable_data) != 1:        
-            
+            # No word 'фото' in first div._18zamfw
             timetable_data = make_clean_list(timetable_data)
-            print('1 clean data', len(timetable_data),timetable_data )
+            print(street, '\n', len(timetable_data),timetable_data, end='\n\n' )             
             timetable_data = prepare_data_for_excel(timetable_data)
         else:
-        # If company has photo the array will only contain text 'фото' 
-        # if len(timetable_data) != 1:
-            
+            # If company has photo the array will only contain text 'фото'             
+            # Has word 'фото' in first div._18zamfw
             timetable_data = browser.find_elements_by_class_name('_18zamfw')[1]
             timetable_data = timetable_data.text
             timetable_data = timetable_data.split('\n')
             
             timetable_data = make_clean_list(timetable_data)
-            print('2 clean data', len(timetable_data),timetable_data )
+            print(street, '\n', len(timetable_data), timetable_data, end='\n\n' )
             timetable_data = prepare_data_for_excel(timetable_data)       
           
     except:
         try:
             # Branch temporarily doesn't work -  Филиал временно не работает
-            browser.find_element_by_class_name('_1xm5wvm').text 
+            browser.find_element_by_class_name('_1xm5wvm').text # to check if there will be an error
             get_region_street_phone()
             timetable_data = [region, street, 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', phone] 
-            print(len(timetable_data), timetable_data )
+            print(street, '\n', len(timetable_data), timetable_data, end='\n\n' )
 
         except:
              
@@ -282,17 +300,15 @@ def get_gis_data(gis_link_to_search):
             timetable_data = browser.find_elements_by_class_name('_18zamfw')[0] 
             timetable_data = timetable_data.text
             timetable_data = timetable_data.split('\n')
-            print(timetable_data)
+            print(street , '\n', timetable_data,  end='\n\n' )
 
-            # Works everyday
-            for item in timetable_data:
-                print(item)
-                if 'Ежедневно' in str(item):
-                    timetable_data = [region, street, 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', timetable_data[-1], phone]
-           
+            # Works everyday             
+            if any('Ежедневно' in s for s in timetable_data):
+                timetable_data = [region, street, 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', timetable_data[-1], phone]
+            else:
             # Works monday to friday
-            timetable_data = make_clean_list(timetable_data)             
-            timetable_data = prepare_data_for_excel(timetable_data)
+                timetable_data = make_clean_list(timetable_data)             
+                timetable_data = prepare_data_for_excel(timetable_data)
                 
             
         
@@ -311,8 +327,10 @@ def write_row(timetable_data_list):
         wsTarget.cell(row = row, column = col, value=f'{data}')  
         col += 1  
     
-# MAIN LOOP
+# MAIN LOOP 
 write_headers(headers)
+
+print('Начал работу по сбору данных\n\n')
 for gis_link in gis_links_to_search:
     try:
         get_gis_data(gis_link)

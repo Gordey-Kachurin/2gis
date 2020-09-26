@@ -18,7 +18,9 @@ browser = webdriver.Firefox()
 
 # Provide branch url 
 # KDL OLYMP BRANCH url in Almaty example: 'https://2gis.kz/almaty/branches/9429948590733484'
-browser.get('https://2gis.kz/nur_sultan/branches/70000001018099222')
+# Aktau https://2gis.kz/aktau/branches/70000001028456934
+# Astana https://2gis.kz/nur_sultan/branches/70000001018099222
+browser.get('https://2gis.kz/aktau/branches/70000001028456934')
 branch_count = browser.find_elements(By.CLASS_NAME, "_1p8iqzw")[1].text
 
 for item in range(1,10):
