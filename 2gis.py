@@ -8,6 +8,8 @@ from openpyxl.styles import Alignment #, named_styles
 from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
+
 import sys 
  
 # PROVIDE ".xlsx" FILE WITH 2GIS LINKS IN FIRST COLUMN
@@ -81,7 +83,14 @@ def make_clean_list(data_list):
         return data_list
      
     return data_list   
-     
+
+def find_elements_by_class_name_and_make_list():
+    global timetable_data
+    timetable_data = browser.find_elements_by_class_name('_18zamfw')[0] 
+    timetable_data = timetable_data.text
+    timetable_data = timetable_data.split('\n')
+    # print(street , '\n', timetable_data,  end='\n' )
+    return timetable_data
 
 
 def prepare_data_for_excel(data_list):
@@ -366,6 +375,16 @@ def get_gis_data(gis_link_to_search):
     #     browser.get(gis_link_to_search)
     #     browser.find_elements(By.CLASS_NAME, "_18zamfw")[1].click()
 
+    # Scroll if there is Advertisement of company official website
+    try:
+        browser.get(gis_link_to_search)
+        browser.find_element_by_class_name('_5kaapu') # Element of 'Перейти на сайт'
+        contents = browser.find_elements_by_class_name('_z3fqkm') # _z3fqkm - arrows
+        browser.execute_script("arguments[0].scrollIntoView();"  , contents[-1] )
+        # browser.find_elements_by_class_name('_z3fqkm')[1].click()
+    except NoSuchElementException:    
+        pass
+
     try:
 
         global street
@@ -373,8 +392,13 @@ def get_gis_data(gis_link_to_search):
         global phone
         global timetable_data
 
-        browser.get(gis_link_to_search)
-        browser.find_elements_by_class_name('_z3fqkm')[1].click() # _z3fqkm - arrow; _18zamfw - block
+        
+        # Checks if there are two arrows or one
+        if len(browser.find_elements_by_class_name('_z3fqkm')) == 1:
+            browser.find_elements_by_class_name('_z3fqkm')[0].click()
+        else:
+            browser.find_elements_by_class_name('_z3fqkm')[1].click() # _z3fqkm - arrow; _18zamfw - block
+        
         get_region_street_phone()
 
         # NOT ALL DATA IS CATCHED. SOME DAYS MAY BE MISSING
@@ -394,7 +418,6 @@ def get_gis_data(gis_link_to_search):
             timetable_data = browser.find_elements_by_class_name('_18zamfw')[1]
             timetable_data = timetable_data.text
             timetable_data = timetable_data.split('\n')
-            
             timetable_data = make_clean_list(timetable_data)
             print(street, '\n', len(timetable_data), timetable_data, end='\n' )
             timetable_data = prepare_data_for_excel(timetable_data)       
@@ -408,23 +431,30 @@ def get_gis_data(gis_link_to_search):
             print(street, '\n', len(timetable_data), timetable_data, end='\n' )
 
         except:
-             
-            get_region_street_phone()
-            timetable_data = browser.find_elements_by_class_name('_18zamfw')[0] 
-            timetable_data = timetable_data.text
-            timetable_data = timetable_data.split('\n')
-            print(street , '\n', timetable_data,  end='\n' )
+            if 'фото' not in find_elements_by_class_name_and_make_list():
+                get_region_street_phone()
+                timetable_data = browser.find_elements_by_class_name('_18zamfw')[0] 
+                timetable_data = timetable_data.text
+                timetable_data = timetable_data.split('\n')
+                print(street , '\n', timetable_data,  end='\n' )
 
-            # Works everyday             
-            if any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 3):
-                timetable_data = [region, street, 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', timetable_data[-1], phone]
-            elif any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 2):
-                timetable_data = [region, street, timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], '', phone]
+                # Works everyday             
+                if any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 3):
+                    timetable_data = [region, street, 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', timetable_data[-1], phone]
+                elif any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 2):
+                    timetable_data = [region, street, timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], '', phone]
+                else:
+                # Works monday to friday
+                    timetable_data = make_clean_list(timetable_data)             
+                    timetable_data = prepare_data_for_excel(timetable_data)
             else:
-            # Works monday to friday
-                timetable_data = make_clean_list(timetable_data)             
-                timetable_data = prepare_data_for_excel(timetable_data)
-                
+                # Works everyday. Found data on second element
+                get_region_street_phone()
+                timetable_data = browser.find_elements_by_class_name('_18zamfw')[1] 
+                timetable_data = timetable_data.text
+                timetable_data = timetable_data.split('\n')
+                print(street , '\n', timetable_data,  end='\n' )
+                timetable_data = [region, street, timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], '', phone]
             
         
          
