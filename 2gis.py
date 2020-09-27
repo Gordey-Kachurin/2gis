@@ -9,7 +9,7 @@ from tkinter import Tk
 from tkinter.filedialog import askopenfilename
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
-
+import psutil
 import sys 
 
 
@@ -33,10 +33,26 @@ print('''
 При обработке 54-й ссылки из 58 примерный расход памяти браузером составил 4 гигабайта.
 Если оперативной памяти недостаточно, следует раздробить список ссылок на несколько частей
 и отдельно запускать программу для каждой из частей.
-{}
-'''.format('=' * 80)) 
+''' , end='') 
 
+ram_total = ''
+ram_available = ''
+ram_percent_available = ''
+def ram_info(memory='Текущий объем памяти вашего компьютера:'):
+    global ram_total
+    global ram_available
+    global ram_percent_available
+    ram_total = psutil.virtual_memory().total / 1024**3
+    ram_available = psutil.virtual_memory().available / 1024**3
+    ram_percent_available = psutil.virtual_memory().available * 100 / psutil.virtual_memory().total
+    print('-' * 80)
+    print(memory)
+    print('  Всего памяти (в гигабайтах): ' +  "{:.1f}".format(ram_total )  )
+    print('  Свободно памяти (в гигабайтах): ' + "{:.1f}".format(ram_available) )
+    print('  Свободно памяти (в процентах): ' + "{:.1f}".format(ram_percent_available))
+    print('=' * 80, '\n')
 
+ram_info()
 # PROVIDE ".xlsx" FILE WITH 2GIS LINKS IN FIRST COLUMN
 # EXAMPLE OF LINK: 'https://2gis.kz/nur_sultan/geo/9570784863367204'
 Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
@@ -75,6 +91,7 @@ def save_exit():
     filename =  f'{city_name[3]} 2gis_timetable'
     filetype = '.xlsx'
     filepath = os.path.join(start + '/' + end + '/' + filename + ' ' + date + filetype)
+    ram_info('Состояние памяти на момент сохранения:')
     wbTarget.save(filepath)
     wbTarget.close()
     gis_links_file.close()
