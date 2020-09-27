@@ -96,9 +96,11 @@ filename =  f'{city_name[3]} 2gis_urls'
 filetype = '.xlsx'
 filepath = os.path.join(start + '/' + end + '/' + filename + ' ' + date + filetype)
 wb_urls.save(filepath)
-print('\nНайдено',len(clean_hrefs), 'ссылок из' , branch_count)
-print(f'\nДанные сохранены в папку "{start}\\{end}\\", файл "{filename} {date}{filetype}"', end='\n\n')
-input('Нажмите Enter для выхода.')
 wb_urls.close()
-browser.quit()  
+browser.quit() 
+
+print('\nНайдено',len(clean_hrefs), 'ссылок из' , branch_count)
+print(f'Данные сохранены в папку "{start}\\{end}\\", файл "{filename} {date}{filetype}"', end='\n\n')
+input('Нажмите Enter для выхода.')
+ 
 sys.exit()
