@@ -27,7 +27,7 @@ for i in range(1, row_count + 1): # '+1' to write the last row
     cell_value = gis_links_sheet.cell(row = i, column = 1).value
     gis_links_to_search.append(cell_value)
 
-
+print('Начал работу по сбору данных\n\n')
 browser = webdriver.Firefox()
 street = ''
 region = ''
@@ -43,14 +43,18 @@ def save_exit():
     start = splitedcwd[0]
     end = splitedcwd[1]
     date = datetime.today().strftime('%Y-%m-%d %H-%M-%S')
-    filepath = os.path.join(start + '/' + end + '/' + date +  ' 2gis.xlsx')
+     
+    city_name = gis_links_to_search[0].split('/')
+    filename =  f'{city_name[3]} 2gis_timetable'
+    filetype = '.xlsx'
+    filepath = os.path.join(start + '/' + end + '/' + filename + ' ' + date + filetype)
     wbTarget.save(filepath)
     wbTarget.close()
     gis_links_file.close()
     browser.quit()
 
     print()
-    print(f'Закончил работу.\nДанные сохранены в папку "{start}\\{end}\\", файл "{date} 2gis.xlsx"', end='\n\n')
+    print(f'Закончил работу.\nДанные сохранены в папку "{start}\\{end}\\", файл "{filename} {date}{filetype}"', end='\n\n')
     sys.exit() # comment this line if you want program to go on
 
 
@@ -89,12 +93,29 @@ def prepare_data_for_excel(data_list):
      
     Function may cause [TypeError: 'NoneType' object is not iterable] in [for loop] if none of conditions apply.
 
-    Order of [if] statements matter.
+    Order of [if] statements matter. More specific [if] statements should come before less specific.
     '''
 
     global street
     global region
     global phone
+
+
+# 15 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
+#  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Сб', '——', 'Вс', '08:00–14:00—', 
+# 'прием анализов: пн-пт 8:00-17:00; вс 8:00-14:00']
+    if len(data_list) == 15 and  ((len(data_list[1]) > 12)  and  ('Чт'==  data_list[6] and 'Пт' ==  data_list[8] and 'Вс' ==  data_list[-3])):
+        lunch =  data_list[1][11:]
+        mon = data_list[1][:11] 
+        tue = data_list[3][:11] 
+        wed = data_list[5][:11] 
+        thu = data_list[7][:11]
+        fri = data_list[9][:11]         
+        sat = data_list[-4]       
+        sun = data_list[-2]
+        all_time = data_list[-1]
+        data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time + '. Обед будни:' + lunch, phone]
+        return data_list
      
     # working with ['Пн', '07:00–17:00', 'Вт', '07:00–17:00', 'Ср', '07:00–17:00', #
     # 'Чт', '07:00–17:00', 'Пт', '07:00–17:00', 'Сб', '08:00–13:00', 'Вс', '08:00–13:00', 
@@ -110,7 +131,63 @@ def prepare_data_for_excel(data_list):
         all_time = data_list[-1]
         data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time, phone] 
         return data_list
- 
+
+# 13 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
+#  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Вс', '08:00–14:00—', 
+# 'прием анализов: пн-пт 8:00-17:00, сб 8:00-14:00; выдача анализов: пн-пт 8:00-17:00, сб 8:00-14:00']
+    if len(data_list) == 13 and  ((len(data_list[1]) > 12 ) and ( 'Чт'==  data_list[6] and 'Пт'==  data_list[8] and 'Вс'==  data_list[-3])):
+        lunch =  data_list[1][11:]
+        mon = data_list[1][:11] 
+        tue = data_list[3][:11] 
+        wed = data_list[5][:11] 
+        thu = data_list[7][:11]
+        fri = data_list[9][:11]             
+        sun = data_list[-2]
+        all_time = data_list[-1]
+        data_list = [region, street, mon, tue, wed, thu, fri, '', sun, all_time + '. Обед будни:' + lunch, phone]
+        return data_list
+
+# 13 ['Пн', '07:00–16:0012:00–13:00', 'Вт', '07:00–16:0012:00–13:00', 'Ср', '07:00–16:0012:00–13:00', 
+# 'Чт', '07:00–16:0012:00–13:00', 'Сб', '08:00–14:00—', 'Вс', '——', 'прием анализов: пн-пт 7:00-16:00; сб 8:00-12:00']
+    if len(data_list) == 13 and  (len(data_list[1]) > 12  and  'Чт'==  data_list[-7] and 'Сб' ==  data_list[-5] and 'Вс' ==  data_list[-3]):
+        lunch =  data_list[1][11:]
+        mon = data_list[1][:11] 
+        tue = data_list[3][:11] 
+        wed = data_list[5][:11] 
+        thu = data_list[7][:11]        
+        sat = data_list[-4]       
+        sun = data_list[-2]
+        all_time = data_list[-1]
+        data_list = [region, street, mon, tue, wed, thu, '', sat, sun, all_time + '. Обед будни:' + lunch, phone]
+        return data_list
+
+#  13 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00',
+#  'Чт', '08:00–16:00', 'Пт', 'Сб', '08:00–12:00', 'Вс', '—']
+    if len(data_list) == 13 and  ( 'Пт' ==  data_list[-5] and 'Вс' ==  data_list[-2] ):
+        mon = data_list[1] 
+        tue = data_list[3] 
+        wed = data_list[5] 
+        thu = data_list[7] 
+        sat = data_list[-3]         
+        sun = data_list[-1]
+        data_list = [region, street, mon, tue, wed, thu, '', sat, sun, '', phone]
+        return data_list
+
+#  13 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00',
+#  'Чт', '08:00–16:00', 'Пт', '08:00–16:00', 'Вс', '—', 'прием анализов: пн-пт 8:00-12:00; сб 9:00-11:00']
+    if len(data_list) == 13 and  ('Пт'  == data_list[-5]):
+        mon = data_list[1] 
+        tue = data_list[3] 
+        wed = data_list[5] 
+        thu = data_list[7] 
+        fri = data_list[-4]         
+        sun = data_list[-2]
+        all_time =   data_list[-1]  
+        data_list = [region, street, mon, tue, wed, thu, fri, '', sun, all_time, phone]
+        return data_list
+
+
+
  # 13 ['Пн', '08:00–17:00', 'Вт', '08:00–17:00', 'Ср', '08:00–17:00', 'Чт', 'Пт', '08:00–17:00', 'Сб', '08:00–12:00', 'Вс', '—']
     if len(data_list) == 13 and  ('выдача' not in  data_list  and  'Пт' ==  data_list[7]):
         mon = data_list[1] 
@@ -147,7 +224,6 @@ def prepare_data_for_excel(data_list):
         sun = data_list[-2]
         all_time = data_list[-1]
 
-        # Sometimes in data there are days that missing. This is attemted workaround.
         if 'Чт' not in data_list:
             fri = data_list[-6]
             data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, all_time, phone]
@@ -220,6 +296,19 @@ def prepare_data_for_excel(data_list):
  
         data_list = [region, street, mon, tue, wed, thu, fri,  sat, sun, '', phone]
         return data_list
+ 
+# 12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
+# 'Чт', '08:00–16:00', 'Сб', '08:00–13:00', 'Вс', '—']
+    if len(data_list) == 12 and ('Чт' == data_list[-6] and 'Сб' == data_list[-4]):
+        mon = data_list[1] 
+        tue = data_list[3] 
+        wed = data_list[5] 
+        thu = data_list[7]
+        sat = data_list[-3]  
+        sun = data_list[-1]
+
+        data_list = [region, street, mon, tue, wed, thu, '',  sat, sun, '', phone]
+        return data_list
 
    # 12 ['Пн', '08:00–12:00', 'Вт', '08:00–12:00', 'Чт', '08:00–12:00', 
    # 'Пт', '08:00–12:00', 'Сб', '09:00–12:00', 'Вс', '—']     
@@ -244,8 +333,32 @@ def prepare_data_for_excel(data_list):
         sun = data_list[11]
 
         data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, '', phone]
-        return data_list    
+        return data_list   
 
+# 12 ['Пн', '08:00–18:00', 'Вт', '08:00–18:00', 'Ср', '08:00–18:00', 
+# 'Чт', '08:00–18:00', 'Пт', '08:00–18:00', 'Сб', '08:00–18:00']
+    if len(data_list) == 12 and ('Пт' ==  data_list[-4] and 'Сб' == data_list[-2]):
+            mon = data_list[1] 
+            tue = data_list[3] 
+            wed = data_list[5]
+            thu = data_list[7] 
+            fri = data_list[-3]
+            sat = data_list[-1]
+
+            data_list = [region, street, mon, tue, wed, thu, fri,  sat, '', '', phone]
+            return data_list 
+
+# 12 ['Пн', '07:00–18:00', 'Вт', '07:00–18:00', 'Ср', '07:00–18:00', 'Чт', '07:00–18:00', 'Пт', '07:00–18:00', 'Вс', '08:00–13:00']         
+    if len(data_list) == 12 and ('Пт' ==  data_list[-4] and 'Вс' == data_list[-2]):
+        mon = data_list[1] 
+        tue = data_list[3] 
+        wed = data_list[5]
+        thu = data_list[7] 
+        fri = data_list[-3]
+        sun = data_list[-1]
+
+        data_list = [region, street, mon, tue, wed, thu, fri,  '', sun, '', phone]
+        return data_list 
         
 
 def get_gis_data(gis_link_to_search):
@@ -273,7 +386,7 @@ def get_gis_data(gis_link_to_search):
         if len(timetable_data) != 1:        
             # No word 'фото' in first div._18zamfw
             timetable_data = make_clean_list(timetable_data)
-            print(street, '\n', len(timetable_data),timetable_data, end='\n\n' )             
+            print(street, '\n', len(timetable_data),timetable_data, end='\n' )             
             timetable_data = prepare_data_for_excel(timetable_data)
         else:
             # If company has photo the array will only contain text 'фото'             
@@ -283,7 +396,7 @@ def get_gis_data(gis_link_to_search):
             timetable_data = timetable_data.split('\n')
             
             timetable_data = make_clean_list(timetable_data)
-            print(street, '\n', len(timetable_data), timetable_data, end='\n\n' )
+            print(street, '\n', len(timetable_data), timetable_data, end='\n' )
             timetable_data = prepare_data_for_excel(timetable_data)       
           
     except:
@@ -292,7 +405,7 @@ def get_gis_data(gis_link_to_search):
             browser.find_element_by_class_name('_1xm5wvm').text # to check if there will be an error
             get_region_street_phone()
             timetable_data = [region, street, 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', 'не работает', phone] 
-            print(street, '\n', len(timetable_data), timetable_data, end='\n\n' )
+            print(street, '\n', len(timetable_data), timetable_data, end='\n' )
 
         except:
              
@@ -300,11 +413,13 @@ def get_gis_data(gis_link_to_search):
             timetable_data = browser.find_elements_by_class_name('_18zamfw')[0] 
             timetable_data = timetable_data.text
             timetable_data = timetable_data.split('\n')
-            print(street , '\n', timetable_data,  end='\n\n' )
+            print(street , '\n', timetable_data,  end='\n' )
 
             # Works everyday             
-            if any('Ежедневно' in s for s in timetable_data):
+            if any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 3):
                 timetable_data = [region, street, 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', 'Ежедневно', timetable_data[-1], phone]
+            elif any('Ежедневно' in s for s in timetable_data) and (len(timetable_data) == 2):
+                timetable_data = [region, street, timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], timetable_data[0], '', phone]
             else:
             # Works monday to friday
                 timetable_data = make_clean_list(timetable_data)             
@@ -330,13 +445,16 @@ def write_row(timetable_data_list):
 # MAIN LOOP 
 write_headers(headers)
 
-print('Начал работу по сбору данных\n\n')
+
 for gis_link in gis_links_to_search:
     try:
         get_gis_data(gis_link)
         write_row(timetable_data)
         wsTarget.cell(row = row, column = len(headers)   , value=f'{gis_link}')
-    except:
+        print(f'Обработано ссылок: {row - 1} из {len(gis_links_to_search)}.\n')
+    except Exception as e:
+        print('Ошибка:', e)
+        print(f'Обработано ссылок: {row - 2} из {len(gis_links_to_search)}.')
         save_exit()    
 
     row += 1

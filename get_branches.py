@@ -28,10 +28,18 @@ city_name = direct_link_to_branches.split('/')
 # print(city_name)
 browser = webdriver.Firefox()
 
-# Provide branch url 
-# KDL OLYMP BRANCH url in Almaty example: 'https://2gis.kz/almaty/branches/9429948590733484'
-# Aktau https://2gis.kz/aktau/branches/70000001028456934
-# Astana https://2gis.kz/nur_sultan/branches/70000001018099222
+# Provide branch url. Example:
+# Almaty: 'https://2gis.kz/almaty/branches/9429948590733484'
+# Aktau 'https://2gis.kz/aktau/branches/70000001028456934'
+# Astana 'https://2gis.kz/nur_sultan/branches/70000001018099222'
+# Uralsk 'https://2gis.kz/uralsk/branches/70000001025080018'
+# Aktobe 'https://2gis.kz/aktobe/branches/70000001032326074'
+# Kostanai 'https://2gis.kz/kostanay/branches/70000001035235895'
+# Shymkent 'https://2gis.kz/shymkent/branches/70000001025934880'
+# Pavlodar 'https://2gis.kz/pavlodar/branches/70000001018654399'
+# Karaganda 'https://2gis.kz/karaganda/branches/11822485892766619'
+# Ust Kamenogorsk 'https://2gis.kz/ustkam/branches/12807648311251661'
+# Petropavlovsk 'https://2gis.kz/petropavlovsk/branches/70000001038197192'
 browser.get(direct_link_to_branches)
 branch_count = browser.find_elements(By.CLASS_NAME, "_1p8iqzw")[1].text
 
