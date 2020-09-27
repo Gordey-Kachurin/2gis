@@ -11,7 +11,32 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 
 import sys 
- 
+
+
+print('''
+Программа предназначена для получения информации по режиму работы филиалов организации с 2ГИС.
+Сначала необходимо выбрать файл ".xlsx", в первом столбце которого 
+должны быть прямые ссылки на страницу филиала (точки продаж) начиная с ячейки "А1".
+Пример ссылки: "https://2gis.kz/almaty/firm/70000001024622687"
+
+На компьютере должен быть устанолен браузер Firefox, 
+потому что программа взаимодействует с ним для поиска дынныъ. 
+Чтобы управлять Firefox с помощью программного кода 
+используется 'geckodriver' https://github.com/mozilla/geckodriver/releases.
+Если браузер не работает, возможно папку с geckodriver.exe необходимо добавить в PATH.
+Версия geckodriver.exe должна соответсвовать версии Firefox на компьютере.
+
+Итоговый файл будет сохранен в ту же папку, где была запущена программа.
+
+Во время тестирования обнаружен значительный расход оперативной памяти со стороны браузера Firefox.
+При обработке 36-й ссылки из 58 примерный расход памяти браузером составил 2,5 гигабайт.
+При обработке 54-й ссылки из 58 примерный расход памяти браузером составил 4 гигабайта.
+Если оперативной памяти недостаточно, следует раздробить список ссылок на несколько частей
+и отдельно запускать программу для каждой из частей.
+{}
+'''.format('=' * 80)) 
+
+
 # PROVIDE ".xlsx" FILE WITH 2GIS LINKS IN FIRST COLUMN
 # EXAMPLE OF LINK: 'https://2gis.kz/nur_sultan/geo/9570784863367204'
 Tk().withdraw() # we don't want a full GUI, so keep the root window from appearing
@@ -55,8 +80,8 @@ def save_exit():
     gis_links_file.close()
     browser.quit()
 
-    print()
-    print(f'Закончил работу.\nДанные сохранены в папку "{start}\\{end}\\", файл "{filename} {date}{filetype}"', end='\n\n')
+    print(f'\nЗакончил работу.\nДанные сохранены в папку "{start}\\{end}\\", файл "{filename} {date}{filetype}"', end='\n\n')
+    input('Нажмите Enter для выхода.')
     sys.exit() # comment this line if you want program to go on
 
 
@@ -397,12 +422,11 @@ def get_gis_data(gis_link_to_search):
         if len(browser.find_elements_by_class_name('_z3fqkm')) == 1:
             browser.find_elements_by_class_name('_z3fqkm')[0].click()
         else:
-            browser.find_elements_by_class_name('_z3fqkm')[1].click() # _z3fqkm - arrow; _18zamfw - block
+            browser.find_elements_by_class_name('_z3fqkm')[1].click() # _z3fqkm - arrow; 
         
         get_region_street_phone()
 
-        # NOT ALL DATA IS CATCHED. SOME DAYS MAY BE MISSING
-        timetable_data = browser.find_element_by_class_name('_18zamfw') 
+        timetable_data = browser.find_element_by_class_name('_18zamfw') # _18zamfw - timetable part
         timetable_data = timetable_data.text
         timetable_data = timetable_data.split('\n')
         
@@ -491,7 +515,3 @@ for gis_link in gis_links_to_search:
    
 save_exit()
 
-
-# html = browser.page_source
-# soup = BeautifulSoup(html,'html.parser' )
-# print(soup.prettify())
