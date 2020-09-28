@@ -118,13 +118,10 @@ def make_clean_list(data_list):
     del data_list[:2]
     if 'время работы' in data_list:
         data_list.remove('время работы')  
-        return data_list
+        if 'обед' in data_list:      
+            data_list.remove('обед')    
 
-    if 'обед' in data_list:      
-        data_list.remove('обед')    
-        return data_list
-     
-    return data_list   
+    return data_list
 
 def find_elements_by_class_name_and_make_list():
     global timetable_data
@@ -133,6 +130,106 @@ def find_elements_by_class_name_and_make_list():
     timetable_data = timetable_data.split('\n')
     # print(street , '\n', timetable_data,  end='\n' )
     return timetable_data
+
+
+def prepare_data_for_row_with_lunch(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=-4, sun=-2, all_time=-1):
+    global region
+    global street
+    global phone
+
+    lunch =  data_list[1][11:]
+
+    if mon == False:
+        mon = ''
+    else:    
+        mon = data_list[mon][:11] 
+    
+    if tue == False:
+        tue = ''
+    else:
+        tue = data_list[tue][:11] 
+    
+    if wed == False:
+        wed = ''
+    else:       
+        wed = data_list[wed][:11]
+    
+    if thu == False:
+        thu = ''
+    else:     
+        thu = data_list[thu][:11]
+    
+    if fri == False:
+        fri = ''
+    else:    
+        fri = data_list[fri][:11]   
+
+    if sat == False:
+        sat = ''
+    else:      
+        sat = data_list[sat]    
+
+    if sun == False:
+        sun = ''
+    else:       
+        sun = data_list[sun]
+
+    if all_time == False:
+        all_time = ''
+    else:    
+        all_time = data_list[all_time]
+
+    data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time + '. Обед будни:' + lunch, phone]
+    return data_list
+
+
+def prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=-4, sun=-2, all_time=-1):
+    global region
+    global street
+    global phone
+
+    if mon == False:
+        mon = ''
+    else:    
+        mon = data_list[mon] 
+
+    if tue == False:
+        tue = ''
+    else:
+        tue = data_list[tue] 
+
+    if wed == False:
+        wed = ''
+    else:     
+        wed = data_list[wed] 
+
+    if thu == False:
+        thu = ''
+    else:
+        thu = data_list[thu] 
+
+    if fri == False:
+        fri = ''
+    else:
+        fri = data_list[fri]
+
+    if sat == False:
+        sat = ''
+    else:
+        sat = data_list[sat]  
+    
+    if sun == False:
+        sun = ''
+    else:
+        sun = data_list[sun]
+   
+    if all_time == False:
+        all_time = ''
+    else:    
+        all_time = data_list[all_time]
+
+    data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time, phone] 
+    return data_list
 
 
 def prepare_data_for_excel(data_list):
@@ -144,14 +241,65 @@ def prepare_data_for_excel(data_list):
      
     Function may cause [TypeError: 'NoneType' object is not iterable] in [for loop] if none of conditions apply.
 
-    Order of [if] statements matter. More specific [if] statements should come before less specific.
+    Order of [if] statements matter. More specific [if] statements must come before less specific.
     '''
 
     global street
     global region
     global phone
 
+# 15 ['Пн', '07:00–16:00', 'Вт', '07:00–16:00', 'Ср', '07:00–16:00',
+#     'Чт', '07:00–16:00', 'Пт', '07:00–16:00', 'Сб', '07:00–13:00',
+#     'Вс', '07:30–13:00', 'прием анализов: пн-пт 7:00-15:30; сб 7:00-12:00, вс 7:30-12:00; выдача анализов: пн-пт 7:00-16:00, сб 7:00-13:00, вс 7:30-13:00']
+    if (len(data_list) == 15 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8] and 'Сб' ==  data_list[10] 
+    and 'Вс' ==  data_list[12])):
+        data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=11, sun=-2, all_time=-1)
+        return data_list
 
+# 14 ['Пн', '07:00–19:00', 'Вт', '07:00–19:00', 'Ср', '07:00–19:00', 
+#     'Чт', '07:00–19:00', 'Пт', '07:00–19:00', 'Сб', '08:00–12:00', 
+#     'Вс', '08:00–12:00']
+    if (len(data_list) == 14 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8] and 'Сб' ==  data_list[10] 
+    and 'Вс' ==  data_list[-2])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=11, sun=-1, all_time=False)
+       return data_list
+ 
+
+# 13 ['Пн', '08:00–18:0013:00–14:00', 'Вт', '08:00–18:0013:00–14:00', 
+#     'Чт', '08:00–18:0013:00–14:00', 'Пт', '08:00–18:0013:00–14:00', 'Сб', '——', 
+#     'Вс', '——', 'прием анализов: пн-пт 8:00-12:00']
+    if (len(data_list) == 13 and  (len(data_list[1]) > 12)
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2]   
+    and 'Чт' ==  data_list[4] and 'Пт' ==  data_list[6] and 'Сб' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+        data_list = prepare_data_for_row_with_lunch(data_list, mon=1, tue=3, wed=False, thu=5, fri=7, sat=9, sun=-2, all_time=-1)
+        return data_list
+
+# 13 ['Пн', '07:00–15:00', 'Вт', '07:00–15:00', 'Ср', '07:00–15:00',
+#     'Чт', '07:00–15:00',                      'Сб', '08:00–15:00', 
+#     'Вс', '—', 'прием анализов: пн-пт 7:00-13:00; сб 8:00-12:00']
+    if (len(data_list) == 13 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and                           'Сб' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=False, sat=9, sun=-2, all_time=-1)
+       return data_list
+
+# 13 ['Пн', '08:00–18:00', 'Вт', '08:00–18:00', 'Ср', '08:00–18:00', 
+#                          'Пт', '08:00–18:00', 'Сб', '08:00–18:00',
+#     'Вс', '—', 'прием анализов: пн-пт 8:00-13:00; сб 8:00-12:00']
+    if (len(data_list) == 13 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+                              and 'Пт' ==  data_list[6] and 'Сб' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=False, fri=7, sat=9, sun=-2, all_time=-1)
+       return data_list
+
+'''
 # 15 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
 #  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Сб', '——', 'Вс', '08:00–14:00—', 
 # 'прием анализов: пн-пт 8:00-17:00; вс 8:00-14:00']
@@ -168,249 +316,7 @@ def prepare_data_for_excel(data_list):
         data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time + '. Обед будни:' + lunch, phone]
         return data_list
      
-    # working with ['Пн', '07:00–17:00', 'Вт', '07:00–17:00', 'Ср', '07:00–17:00', #
-    # 'Чт', '07:00–17:00', 'Пт', '07:00–17:00', 'Сб', '08:00–13:00', 'Вс', '08:00–13:00', 
-    #'забор крови: пн-пт 7:00-12:00; сб-вс 8:00-11:00, выдача результатов: пн-пт14:00-17:00; сб-вс 11:00-13:00'] 
-    if len(data_list) == 15:
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7] 
-        fri = data_list[9]
-        sat = data_list[-4]  
-        sun = data_list[-2]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time, phone] 
-        return data_list
-
-# 13 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
-#  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Вс', '08:00–14:00—', 
-# 'прием анализов: пн-пт 8:00-17:00, сб 8:00-14:00; выдача анализов: пн-пт 8:00-17:00, сб 8:00-14:00']
-    if len(data_list) == 13 and  ((len(data_list[1]) > 12 ) and ( 'Чт'==  data_list[6] and 'Пт'==  data_list[8] and 'Вс'==  data_list[-3])):
-        lunch =  data_list[1][11:]
-        mon = data_list[1][:11] 
-        tue = data_list[3][:11] 
-        wed = data_list[5][:11] 
-        thu = data_list[7][:11]
-        fri = data_list[9][:11]             
-        sun = data_list[-2]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, fri, '', sun, all_time + '. Обед будни:' + lunch, phone]
-        return data_list
-
-# 13 ['Пн', '07:00–16:0012:00–13:00', 'Вт', '07:00–16:0012:00–13:00', 'Ср', '07:00–16:0012:00–13:00', 
-# 'Чт', '07:00–16:0012:00–13:00', 'Сб', '08:00–14:00—', 'Вс', '——', 'прием анализов: пн-пт 7:00-16:00; сб 8:00-12:00']
-    if len(data_list) == 13 and  (len(data_list[1]) > 12  and  'Чт'==  data_list[-7] and 'Сб' ==  data_list[-5] and 'Вс' ==  data_list[-3]):
-        lunch =  data_list[1][11:]
-        mon = data_list[1][:11] 
-        tue = data_list[3][:11] 
-        wed = data_list[5][:11] 
-        thu = data_list[7][:11]        
-        sat = data_list[-4]       
-        sun = data_list[-2]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, '', sat, sun, all_time + '. Обед будни:' + lunch, phone]
-        return data_list
-
-#  13 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00',
-#  'Чт', '08:00–16:00', 'Пт', 'Сб', '08:00–12:00', 'Вс', '—']
-    if len(data_list) == 13 and  ( 'Пт' ==  data_list[-5] and 'Вс' ==  data_list[-2] ):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7] 
-        sat = data_list[-3]         
-        sun = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, '', sat, sun, '', phone]
-        return data_list
-
-#  13 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00',
-#  'Чт', '08:00–16:00', 'Пт', '08:00–16:00', 'Вс', '—', 'прием анализов: пн-пт 8:00-12:00; сб 9:00-11:00']
-    if len(data_list) == 13 and  ('Пт'  == data_list[-5]):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7] 
-        fri = data_list[-4]         
-        sun = data_list[-2]
-        all_time =   data_list[-1]  
-        data_list = [region, street, mon, tue, wed, thu, fri, '', sun, all_time, phone]
-        return data_list
-
-
-
- # 13 ['Пн', '08:00–17:00', 'Вт', '08:00–17:00', 'Ср', '08:00–17:00', 'Чт', 'Пт', '08:00–17:00', 'Сб', '08:00–12:00', 'Вс', '—']
-    if len(data_list) == 13 and  ('выдача' not in  data_list  and  'Пт' ==  data_list[7]):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        fri = data_list[8] 
-        sat = data_list[-3]  
-        sun = data_list[-1]
-            
-        data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, '', phone]
-        return data_list
-
-
-# 13 [ 'Пн', '08:00–12:00', 'Вт', '08:00–12:00', 'Ср', '08:00–12:00', 'Чт', '08:00–12:00', 'Пт', 'Сб', '—', 'Вс', '—']
-    if len(data_list) == 13 and  'Сб' == data_list[9]:
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7] 
-        sat = data_list[-3]  
-        sun = data_list[-1]
-         
-        data_list = [region, street, mon, tue, wed, thu, '',  sat, sun, '', phone]
-        return data_list
-
-
-    if len(data_list) == 13 and ('Ср' in data_list):
-    
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-
-        sat = data_list[-4]  
-        sun = data_list[-2]
-        all_time = data_list[-1]
-
-        if 'Чт' not in data_list:
-            fri = data_list[-6]
-            data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, all_time, phone]
-            return data_list
-
-        if 'Пт' not in data_list:   
-            thu = data_list[-6] 
-            data_list = [region, street, mon, tue, wed, thu, '',  sat, sun, all_time, phone]
-            return data_list
-
-    # working with ['Пн', '07:00–17:00', 'Вт', '07:00–17:00', 'Чт', '07:00–17:00', 'Пт', '07:00–17:00', 'Сб', '08:00–13:00', 'Вс', '—', 'забор крови: пн-пт 
-    # 7:00-12:00; сб 8:00-11:00; выдача результатов: пн-пт 12:00-17:00; сб 11:00-13:00']
-    if len(data_list) == 13 and ('Ср' not in data_list):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        thu = data_list[5] 
-        fri = data_list[7]
-        sat = data_list[9]  
-        sun = data_list[-2]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, '', thu, fri,  sat, sun, all_time, phone]
-        return data_list
-
-    if len(data_list) == 13 and ('Пт'in data_list and 'Чт' in data_list):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        fri = data_list[-5]
-        sat = data_list[-3]  
-        sun = data_list[-1]
-        data_list = [region, street, mon, tue, wed,  '' ,fri,  sat, sun, '', phone]
-        return data_list
-
-# work with 14 ['Пн', '07:00–15:00', 'Вт', '07:00–15:00', 'Ср', '07:00–15:00', 'Чт', 'Пт', '07:00–15:00', 'Сб', '08:00–13:00', 'Вс', '—', 'забор крови: 
-# пн-пт 7:00-12:00; сб 8:00-11:00; выдача результатов: пн-пт 10:00-15:00; сб 10:00-13:00']
-    if len(data_list) == 14 and data_list[7] == 'Пт':
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        fri = data_list[8]
-        sat = data_list[10]
-        sun = data_list[12]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, all_time, phone]
-        return data_list
-
-#14 ['Пн', '07:00–20:00', 'Вт', '07:00–20:00', 'Ср', '07:00–20:00', 'Чт', '07:00–20:00',
-#  'Пт', 'Сб', '08:00–20:00', 'Вс', '08:00–20:00', 
-# 'забор крови: пн-пт 7:00-12:00; сб-вс 8:00-11:00; выдача результатов: пн-пт 11:00-20:00; сб-вс 10:00-20:00']
-    if len(data_list) == 14 and data_list[9] == 'Сб':
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7]
-        sat = data_list[10]
-        sun = data_list[12]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, '',  sat, sun, all_time, phone]
-        return data_list    
-
-    if len(data_list) == 14:
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7] 
-        fri = data_list[9]
-        sat = data_list[11]  
-        sun = data_list[13]
-        #all_time = data_list[-1]
- 
-        data_list = [region, street, mon, tue, wed, thu, fri,  sat, sun, '', phone]
-        return data_list
- 
-# 12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
-# 'Чт', '08:00–16:00', 'Сб', '08:00–13:00', 'Вс', '—']
-    if len(data_list) == 12 and ('Чт' == data_list[-6] and 'Сб' == data_list[-4]):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        thu = data_list[7]
-        sat = data_list[-3]  
-        sun = data_list[-1]
-
-        data_list = [region, street, mon, tue, wed, thu, '',  sat, sun, '', phone]
-        return data_list
-
-   # 12 ['Пн', '08:00–12:00', 'Вт', '08:00–12:00', 'Чт', '08:00–12:00', 
-   # 'Пт', '08:00–12:00', 'Сб', '09:00–12:00', 'Вс', '—']     
-    if len(data_list) == 12 and ('Ср' not in data_list ):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        thu = data_list[5] 
-        fri = data_list[7]
-        sat = data_list[9]  
-        sun = data_list[11]
-
-        data_list = [region, street, mon, tue, '', thu, fri,  sat, sun, '', phone]
-        return data_list
-
-# 12 ['Пн', '08:00–17:00', 'Вт', '08:00–17:00', 'Ср', '08:00–17:00', 'Пт', '08:00–17:00', 'Сб', '08:00–12:00', 'Вс', '—']
-    if len(data_list) == 12 and ('Чт' not in data_list ):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5] 
-        fri = data_list[7]
-        sat = data_list[9]  
-        sun = data_list[11]
-
-        data_list = [region, street, mon, tue, wed, '', fri,  sat, sun, '', phone]
-        return data_list   
-
-# 12 ['Пн', '08:00–18:00', 'Вт', '08:00–18:00', 'Ср', '08:00–18:00', 
-# 'Чт', '08:00–18:00', 'Пт', '08:00–18:00', 'Сб', '08:00–18:00']
-    if len(data_list) == 12 and ('Пт' ==  data_list[-4] and 'Сб' == data_list[-2]):
-            mon = data_list[1] 
-            tue = data_list[3] 
-            wed = data_list[5]
-            thu = data_list[7] 
-            fri = data_list[-3]
-            sat = data_list[-1]
-
-            data_list = [region, street, mon, tue, wed, thu, fri,  sat, '', '', phone]
-            return data_list 
-
-# 12 ['Пн', '07:00–18:00', 'Вт', '07:00–18:00', 'Ср', '07:00–18:00', 'Чт', '07:00–18:00', 'Пт', '07:00–18:00', 'Вс', '08:00–13:00']         
-    if len(data_list) == 12 and ('Пт' ==  data_list[-4] and 'Вс' == data_list[-2]):
-        mon = data_list[1] 
-        tue = data_list[3] 
-        wed = data_list[5]
-        thu = data_list[7] 
-        fri = data_list[-3]
-        sun = data_list[-1]
-
-        data_list = [region, street, mon, tue, wed, thu, fri,  '', sun, '', phone]
-        return data_list 
-        
+'''        
 
 def get_gis_data(gis_link_to_search):
     # if gis_link_to_search.startswith('https://go.2gis'):
