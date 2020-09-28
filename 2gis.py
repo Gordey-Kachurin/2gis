@@ -299,6 +299,47 @@ def prepare_data_for_excel(data_list):
        data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=False, fri=7, sat=9, sun=-2, all_time=-1)
        return data_list
 
+# 13 ['Пн', '07:00–17:00', 'Вт', '07:00–17:00', 'Ср', '07:00–17:00', 
+#     'Чт', '07:00–17:00', 'Пт', '07:00–17:00', 
+#     'Вс', '—', 'прием анализов: пн-пт 7:00-13:00; сб 9:00-12:00']       
+    if (len(data_list) == 13 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8]  
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=False, sun=11, all_time=-1)
+       return data_list
+
+# 13 ['Пн', '08:00–12:00', 'Вт', '08:00–12:00', 
+#     'Чт', '08:00–12:00', 'Пт', '08:00–12:00', 'Сб', '09:00–11:00', 
+#     'Вс', '—', 'выдача результатов: пн-пт 8:00-16:00; сб 9:00-11:00']
+    if (len(data_list) == 13 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2]  
+    and 'Чт' ==  data_list[4] and 'Пт' ==  data_list[6] and 'Сб' ==  data_list[8]   
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=False, thu=5, fri=7, sat=9, sun=11, all_time=-1)
+       return data_list
+
+
+# 12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
+#                          'Пт', '08:00–16:00', 'Сб', '08:00–12:00',
+#     'Вс', '—']       
+    if (len(data_list) == 12 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+                              and 'Пт' ==  data_list[6] and 'Сб' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=False, fri=7, sat=9, sun=11, all_time=False)
+       return data_list
+
+# 12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
+#     'Чт', '08:00–16:00',                      'Сб', '08:00–13:00', 
+#     'Вс', '—']
+    if (len(data_list) == 12 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and                           'Сб' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=False, sat=9, sun=11, all_time=False)
+       return data_list
+
 '''
 # 15 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
 #  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Сб', '——', 'Вс', '08:00–14:00—', 
