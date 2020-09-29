@@ -72,12 +72,13 @@ for i in range(1, row_count + 1): # '+1' to write the last row
 
 print('Начал работу по сбору данных\n\n')
 browser = webdriver.Firefox()
+browser_controller_variable = 1 # should not start from "0" otherwise browser will open, close immediately then open again during first run
 street = ''
 region = ''
 phone = ''
 timetable_data = []
 headers = ["Регион",'Улица', 'Пон', "Вт", "Ср", "Чт", "Пт", "Сб", "Вс", "Все дни", "Тел", 'Ссылка']
- 
+
 
 # SAVE FILE
 def save_exit():
@@ -248,6 +249,16 @@ def prepare_data_for_excel(data_list):
     global region
     global phone
 
+#  15 ['Пн', '08:00–15:0013:00–14:00', 'Вт', '08:00–15:0013:00–14:00', 'Ср', '08:00–15:0013:00–14:00',
+#      'Чт', '08:00–15:0013:00–14:00', 'Пт', '08:00–15:0013:00–14:00', 'Сб', '09:00–14:00—', 
+#      'Вс', '——', 'прием анализов: пн-пт 8:00-11:00; сб 9:00-10:30']   
+    if (len(data_list) == 15 and  (len(data_list[1]) > 12)
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4]   
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8] and 'Сб' ==  data_list[10] 
+    and 'Вс' ==  data_list[12])):
+        data_list = prepare_data_for_row_with_lunch(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=11, sun=13, all_time=-1)
+        return data_list
+
 # 15 ['Пн', '07:00–16:00', 'Вт', '07:00–16:00', 'Ср', '07:00–16:00',
 #     'Чт', '07:00–16:00', 'Пт', '07:00–16:00', 'Сб', '07:00–13:00',
 #     'Вс', '07:30–13:00', 'прием анализов: пн-пт 7:00-15:30; сб 7:00-12:00, вс 7:30-12:00; выдача анализов: пн-пт 7:00-16:00, сб 7:00-13:00, вс 7:30-13:00']
@@ -339,40 +350,53 @@ def prepare_data_for_excel(data_list):
     and 'Вс' ==  data_list[10])):
        data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=False, sat=9, sun=11, all_time=False)
        return data_list
+# 12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
+#     'Чт', '08:00–16:00', 'Пт', '08:00–16:00', 
+#     'Вс', '—']
+    if (len(data_list) == 12 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8] 
+    and 'Вс' ==  data_list[10])):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=False, sun=11, all_time=False)
+       return data_list
 
-'''
-# 15 ['Пн', '08:00–17:0012:00–13:00', 'Вт', '08:00–17:0012:00–13:00', 'Ср', '08:00–17:0012:00–13:00',
-#  'Чт', '08:00–17:0012:00–13:00', 'Пт', '08:00–17:0012:00–13:00', 'Сб', '——', 'Вс', '08:00–14:00—', 
-# 'прием анализов: пн-пт 8:00-17:00; вс 8:00-14:00']
-    if len(data_list) == 15 and  ((len(data_list[1]) > 12)  and  ('Чт'==  data_list[6] and 'Пт' ==  data_list[8] and 'Вс' ==  data_list[-3])):
-        lunch =  data_list[1][11:]
-        mon = data_list[1][:11] 
-        tue = data_list[3][:11] 
-        wed = data_list[5][:11] 
-        thu = data_list[7][:11]
-        fri = data_list[9][:11]         
-        sat = data_list[-4]       
-        sun = data_list[-2]
-        all_time = data_list[-1]
-        data_list = [region, street, mon, tue, wed, thu, fri, sat, sun, all_time + '. Обед будни:' + lunch, phone]
-        return data_list
-     
-'''        
+#  12 ['Пн', '08:00–16:00', 'Вт', '08:00–16:00', 'Ср', '08:00–16:00', 
+#      'Чт', '08:00–16:00', 'Пт', '08:00–16:00', 'Сб', '09:00–13:00']
+    if (len(data_list) == 12 
+    and ('Пн'==  data_list[0] and 'Вт' ==  data_list[2] and 'Ср' ==  data_list[4] 
+    and 'Чт' ==  data_list[6] and 'Пт' ==  data_list[8] and 'Сб' ==  data_list[10] 
+     )):
+       data_list = prepare_data_for_row(data_list, mon=1, tue=3, wed=5, thu=7, fri=9, sat=11, sun=False, all_time=False)
+       return data_list
+
+      
+def browser_controller():
+    '''
+    Provides better use of RAM (Random Access Memory).
+    When remainder == 0 it will close the browser making more RAM available then open it again.
+    '''
+    global browser
+    global browser_controller_variable
+    if browser_controller_variable % 8 == 0: # '8' will use approximately 1 GB of RAM
+        browser.quit()
+        browser = webdriver.Firefox()
+
 
 def get_gis_data(gis_link_to_search):
     # if gis_link_to_search.startswith('https://go.2gis'):
     #     browser.get(gis_link_to_search)
     #     browser.find_elements(By.CLASS_NAME, "_18zamfw")[1].click()
 
-    # Scroll if there is Advertisement of company official website
-    try:
-        browser.get(gis_link_to_search)
-        browser.find_element_by_class_name('_5kaapu') # Element of 'Перейти на сайт'
-        contents = browser.find_elements_by_class_name('_z3fqkm') # _z3fqkm - arrows
-        browser.execute_script("arguments[0].scrollIntoView();"  , contents[-1] )
-        # browser.find_elements_by_class_name('_z3fqkm')[1].click()
-    except NoSuchElementException:    
-        pass
+    # # Scroll if there is Advertisement of company official website
+    # try:
+    #     browser_controller()
+    #     browser.get(gis_link_to_search)
+    #     browser.find_element_by_class_name('_5kaapu') # Element of 'Перейти на сайт'
+    #     arrows = browser.find_elements_by_class_name('_z3fqkm') # _z3fqkm - arrows
+    #     browser.execute_script("arguments[0].scrollIntoView();"  , arrows[-1] )
+    #     # browser.find_elements_by_class_name('_z3fqkm')[1].click()
+    # except NoSuchElementException:    
+    #     pass
 
     try:
 
@@ -380,8 +404,15 @@ def get_gis_data(gis_link_to_search):
         global region
         global phone
         global timetable_data
+        global browser
 
-        
+        browser_controller()
+        browser.get(gis_link_to_search)
+
+        # Scroll  
+        arrows = browser.find_elements_by_class_name('_z3fqkm') # _z3fqkm - arrows
+        browser.execute_script("arguments[0].scrollIntoView();"  , arrows[0] )
+
         # Checks if there are two arrows or one
         if len(browser.find_elements_by_class_name('_z3fqkm')) == 1:
             browser.find_elements_by_class_name('_z3fqkm')[0].click()
@@ -476,6 +507,7 @@ for gis_link in gis_links_to_search:
         save_exit()    
 
     row += 1
+    browser_controller_variable += 1
    
 save_exit()
 
